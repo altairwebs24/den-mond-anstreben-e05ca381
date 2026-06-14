@@ -17,8 +17,14 @@ import process from "node:process";
 //     VITE_ prefix. Never put secrets here — they ship to the browser.
 
 export function getServerConfig() {
+  const approvedAdminEmails = (process.env.APPROVED_ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
   return {
     nodeEnv: process.env.NODE_ENV,
+    approvedAdminEmails,
     // Add server-only values here, e.g.:
     //   databaseUrl: process.env.DATABASE_URL,
     //   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
