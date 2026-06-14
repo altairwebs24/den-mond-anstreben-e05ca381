@@ -20,6 +20,28 @@ const productSchema = z.object({
   published: z.boolean(),
 });
 
+type ProductRow = Database["public"]["Tables"]["products"]["Row"];
+
+const attachProductImageUrls = async (
+  client: SupabaseClient<Database>,
+  products: ProductRow[],
+) =>
+  Promise.all(
+    products.map(async (product) => {
+      const imagePaths = product.images;
+      const images = await Promise.all(
+        imagePaths.map(async (image) => {
+          if (!image.startsWith("product-images/")) return image;
+          const { data } = await client.storage
+            .from("product-images")
+            .createSignedUrl(image.slice("product-images/".length), 60 * 60 * 24);
+          return data?.signedUrl ?? "";
+        }),
+      );
+      return { ...product, images: images.filter(Boolean), image_paths: imagePaths };
+    }),
+  );
+
 export const listProducts = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
@@ -28,7 +50,7 @@ export const listProducts = createServerFn({ method: "GET" }).handler(async () =
     .eq("published", true)
     .order("featured", { ascending: false });
   if (error) throw new Error("Could not load the collection.");
-  return data;
+  return attachProductImageUrls(supabaseAdmin, data);
 });
 
 const adminEmails = new Set(["simbinikhalaza@gmail.com", "altairwebs24@gmail.com"]);
@@ -46,8 +68,7 @@ const requireAdmin = async (context: {
     .maybeSingle();
   const email = typeof context.claims.email === "string" ? context.claims.email.toLowerCase() : "";
   if (!role && adminEmails.has(email)) {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const result = await supabaseAdmin
+    const result = await context.supabase
       .from("user_roles")
       .upsert({ user_id: context.userId, role: "admin" }, { onConflict: "user_id,role" })
       .select("id")
@@ -66,7 +87,7 @@ export const listAdminProducts = createServerFn({ method: "GET" })
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return data;
+    return attachProductImageUrls(context.supabase, data);
   });
 
 export const saveProduct = createServerFn({ method: "POST" })
