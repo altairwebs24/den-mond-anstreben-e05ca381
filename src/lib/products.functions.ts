@@ -75,6 +75,57 @@ const requireAdmin = async (context: {
   if (!role) throw new Error("This account is not authorised to manage the store.");
 };
 
+const adminEmailSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(255),
+});
+
+export const listAdminAccounts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: roles, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id, created_at")
+      .eq("role", "admin")
+      .order("created_at");
+    if (error) throw new Error("Could not load administrators.");
+    return Promise.all(
+      roles.map(async (role) => {
+        const { data } = await supabaseAdmin.auth.admin.getUserById(role.user_id);
+        return { userId: role.user_id, email: data.user?.email ?? "Unknown account" };
+      }),
+    );
+  });
+
+export const allocateAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => adminEmailSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let page = 1;
+    let targetUserId = "";
+    while (!targetUserId) {
+      const { data: users, error } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage: 1000,
+      });
+      if (error) throw new Error("Could not look up that account.");
+      targetUserId = users.users.find((user) => user.email?.toLowerCase() === data.email)?.id ?? "";
+      if (targetUserId || users.users.length < 1000) break;
+      page += 1;
+    }
+    if (!targetUserId) {
+      throw new Error("That email must create an account before it can be made an admin.");
+    }
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: targetUserId, role: "admin" }, { onConflict: "user_id,role" });
+    if (error) throw new Error("Could not grant admin access.");
+    return { email: data.email };
+  });
+
 export const listAdminProducts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
