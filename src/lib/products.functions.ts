@@ -107,7 +107,10 @@ export const allocateAdmin = createServerFn({ method: "POST" })
     let page = 1;
     let targetUserId = "";
     while (!targetUserId) {
-      const { data: users, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+      const { data: users, error } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage: 1000,
+      });
       if (error) throw new Error("Could not look up that account.");
       targetUserId = users.users.find((user) => user.email?.toLowerCase() === data.email)?.id ?? "";
       if (targetUserId || users.users.length < 1000) break;

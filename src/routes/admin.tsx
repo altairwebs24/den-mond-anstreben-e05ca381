@@ -254,10 +254,7 @@ function AdminPage() {
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
           {admins.data?.map((admin) => (
-            <span
-              key={admin.userId}
-              className="border border-border px-3 py-2 text-sm font-bold"
-            >
+            <span key={admin.userId} className="border border-border px-3 py-2 text-sm font-bold">
               {admin.email}
             </span>
           ))}
