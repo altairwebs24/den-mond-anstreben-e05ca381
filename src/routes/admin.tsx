@@ -140,7 +140,12 @@ function AdminPage() {
       for (const file of Array.from(files)) {
         if (!file.type.startsWith("image/")) throw new Error(`${file.name} is not an image.`);
         if (file.size > 8 * 1024 * 1024) throw new Error(`${file.name} is larger than 8 MB.`);
-        const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const extension =
+          file.name
+            .split(".")
+            .pop()
+            ?.toLowerCase()
+            .replace(/[^a-z0-9]/g, "") || "jpg";
         const path = `products/${crypto.randomUUID()}.${extension}`;
         const { error } = await supabase.storage.from("product-images").upload(path, file, {
           contentType: file.type,
@@ -339,7 +344,9 @@ function AdminPage() {
                 <span className="font-bold uppercase">
                   {uploading ? "Uploading images…" : "Choose images to upload"}
                 </span>
-                <span className="text-xs text-muted-foreground">JPG, PNG or WebP · up to 8 MB each</span>
+                <span className="text-xs text-muted-foreground">
+                  JPG, PNG or WebP · up to 8 MB each
+                </span>
                 <Input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -353,12 +360,20 @@ function AdminPage() {
                 <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
                   {splitList(form.images).map((path, index) => {
                     const existingProduct = query.data?.find((product) => product.id === editing);
-                    const existingPaths = (existingProduct as (Product & { image_paths?: string[] }) | undefined)?.image_paths;
+                    const existingPaths = (
+                      existingProduct as (Product & { image_paths?: string[] }) | undefined
+                    )?.image_paths;
                     const existingIndex = existingPaths?.indexOf(path) ?? -1;
-                    const preview = imagePreviews[path] || (existingIndex >= 0 ? existingProduct?.images[existingIndex] : path);
+                    const preview =
+                      imagePreviews[path] ||
+                      (existingIndex >= 0 ? existingProduct?.images[existingIndex] : path);
                     return (
                       <div key={path} className="relative aspect-square overflow-hidden bg-muted">
-                        <img src={preview} alt={`Product upload ${index + 1}`} className="h-full w-full object-cover" />
+                        <img
+                          src={preview}
+                          alt={`Product upload ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
                         <Button
                           type="button"
                           variant="destructive"
@@ -368,7 +383,9 @@ function AdminPage() {
                           onClick={() =>
                             setForm((current) => ({
                               ...current,
-                              images: splitList(current.images).filter((item) => item !== path).join(", "),
+                              images: splitList(current.images)
+                                .filter((item) => item !== path)
+                                .join(", "),
                             }))
                           }
                         >

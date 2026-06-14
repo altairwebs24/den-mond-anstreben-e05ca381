@@ -22,10 +22,7 @@ const productSchema = z.object({
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
-const attachProductImageUrls = async (
-  client: SupabaseClient<Database>,
-  products: ProductRow[],
-) =>
+const attachProductImageUrls = async (client: SupabaseClient<Database>, products: ProductRow[]) =>
   Promise.all(
     products.map(async (product) => {
       const imagePaths = product.images;
