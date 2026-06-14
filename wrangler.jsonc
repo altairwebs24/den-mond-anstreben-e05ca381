@@ -8,4 +8,7 @@
     "directory": ".output/public",
     "binding": "ASSETS",
   },
+  "vars": {
+    "APPROVED_ADMIN_EMAILS": "simbinikhalaza@gmail.com,altairwebs24@gmail.com",
+  },
 }
