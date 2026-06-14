@@ -1,5 +1,6 @@
 import "./lib/error-capture";
 
+import process from "node:process";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
@@ -58,9 +59,18 @@ async function fetchLovableHostedAsset(url: URL): Promise<Response> {
   });
 }
 
+function bindRuntimeEnv(env: unknown): void {
+  if (!env || typeof env !== "object") return;
+
+  for (const [key, value] of Object.entries(env as Record<string, unknown>)) {
+    if (typeof value === "string") process.env[key] = value;
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      bindRuntimeEnv(env);
       const url = new URL(request.url);
       if (isLovableHostedAssetRequest(url) && !url.hostname.endsWith("lovable.app")) {
         return await fetchLovableHostedAsset(url);
