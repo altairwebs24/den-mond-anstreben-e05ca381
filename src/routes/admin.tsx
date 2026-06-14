@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ImagePlus, Loader2, LogOut, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ImagePlus, Loader2, LogOut, MailPlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,8 +14,10 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  allocateAdmin,
   deleteCollection,
   deleteProduct,
+  listAdminAccounts,
   listAdminCollections,
   listAdminProducts,
   saveCollection,
@@ -45,6 +47,7 @@ function AdminPage() {
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState<string | undefined>();
   const [message, setMessage] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
   const [uploading, setUploading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   useEffect(() => {
@@ -64,6 +67,21 @@ function AdminPage() {
     queryFn: () => listAdminCollections(),
     enabled: ready,
     retry: false,
+  });
+  const admins = useQuery({
+    queryKey: ["admin-accounts"],
+    queryFn: () => listAdminAccounts(),
+    enabled: ready,
+    retry: false,
+  });
+  const adminAllocate = useMutation({
+    mutationFn: () => allocateAdmin({ data: { email: adminEmail } }),
+    onSuccess: ({ email }) => {
+      client.invalidateQueries({ queryKey: ["admin-accounts"] });
+      setAdminEmail("");
+      setMessage(`${email} now has admin access.`);
+    },
+    onError: (error) => setMessage(error.message),
   });
   const [collectionName, setCollectionName] = useState("");
   const collectionSave = useMutation({
@@ -211,6 +229,40 @@ function AdminPage() {
           <LogOut />
         </Button>
       </div>
+      <section className="mt-10 border border-border bg-card p-5 sm:p-8">
+        <h2 className="font-display text-2xl font-black uppercase">Administrators</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Grant store management access to another registered account.
+        </p>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <Input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            maxLength={255}
+            placeholder="admin@example.com"
+            value={adminEmail}
+            onChange={(event) => setAdminEmail(event.target.value)}
+          />
+          <Button
+            disabled={adminAllocate.isPending || !adminEmail.trim()}
+            onClick={() => adminAllocate.mutate()}
+          >
+            {adminAllocate.isPending ? <Loader2 className="animate-spin" /> : <MailPlus />}
+            Grant access
+          </Button>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          {admins.data?.map((admin) => (
+            <span
+              key={admin.userId}
+              className="border border-border px-3 py-2 text-sm font-bold"
+            >
+              {admin.email}
+            </span>
+          ))}
+        </div>
+      </section>
       <section className="mt-10 border border-border bg-card p-5 sm:p-8">
         <h2 className="font-display text-2xl font-black uppercase">Collections</h2>
         <p className="mt-2 text-sm text-muted-foreground">
