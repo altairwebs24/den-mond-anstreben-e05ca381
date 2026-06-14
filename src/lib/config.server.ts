@@ -1,5 +1,7 @@
 import process from "node:process";
 
+const DEFAULT_APPROVED_ADMIN_EMAILS = ["simbinikhalaza@gmail.com", "altairwebs24@gmail.com"];
+
 // Server-only config. The .server.ts suffix prevents Vite from bundling
 // this file into the client — values here never reach the browser.
 //
@@ -17,10 +19,13 @@ import process from "node:process";
 //     VITE_ prefix. Never put secrets here — they ship to the browser.
 
 export function getServerConfig() {
-  const approvedAdminEmails = (process.env.APPROVED_ADMIN_EMAILS ?? "")
+  const configuredAdminEmails = (process.env.APPROVED_ADMIN_EMAILS ?? "")
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
+  const approvedAdminEmails = Array.from(
+    new Set([...DEFAULT_APPROVED_ADMIN_EMAILS, ...configuredAdminEmails]),
+  );
 
   return {
     nodeEnv: process.env.NODE_ENV,
