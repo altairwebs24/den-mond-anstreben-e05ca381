@@ -50,8 +50,6 @@ export const listProducts = createServerFn({ method: "GET" }).handler(async () =
   return attachProductImageUrls(supabaseAdmin, data);
 });
 
-const adminEmails = new Set(["simbinikhalaza@gmail.com", "altairwebs24@gmail.com"]);
-
 const requireAdmin = async (context: {
   supabase: SupabaseClient<Database>;
   userId: string;
@@ -64,6 +62,8 @@ const requireAdmin = async (context: {
     .eq("role", "admin")
     .maybeSingle();
   const email = typeof context.claims.email === "string" ? context.claims.email.toLowerCase() : "";
+  const { getServerConfig } = await import("@/lib/config.server");
+  const adminEmails = new Set(getServerConfig().approvedAdminEmails);
   if (!role && adminEmails.has(email)) {
     const result = await context.supabase
       .from("user_roles")
