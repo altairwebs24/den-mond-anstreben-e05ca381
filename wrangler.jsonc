@@ -6,11 +6,11 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".output/public",
-    "binding": "ASSETS",
+    "binding": "ASSETS"
   },
   "vars": {
     "SUPABASE_URL": "https://nlrlvfrzreexywkccuwa.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im5scmx2ZnJ6cmVleHl3a2NjdXdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjI0OTMsImV4cCI6MjA5NjkzODQ5M30.uf7-BTAS3KQz6EKBkpxZpDb4H1kFP9spkWmMI-V-uHc",
-    "APPROVED_ADMIN_EMAILS": "simbinikhalaza@gmail.com,altairwebs24@gmail.com",
-  },
+    "APPROVED_ADMIN_EMAILS": "simbinikhalaza@gmail.com,altairwebs24@gmail.com"
+  }
 }
